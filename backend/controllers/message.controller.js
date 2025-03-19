@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js"; 
+import { getReceiverSocketId, io } from "../socket/socket.js";
+
 
 export const sendMessage = async (req, res) => {
     try {
@@ -9,7 +11,7 @@ export const sendMessage = async (req, res) => {
       const { message } = req.body;
       const senderId = req.user._id;
   
-      // Convert IDs to ObjectId for query
+      
       const receiverObjectId = new mongoose.Types.ObjectId(receiverId);
       const senderObjectId = new mongoose.Types.ObjectId(senderId);
   
@@ -19,21 +21,21 @@ export const sendMessage = async (req, res) => {
   
       if (!conversation) {
         conversation = await Conversation.create({
-          participants: [receiverObjectId, senderObjectId], // Use ObjectIds here
+          participants: [receiverObjectId, senderObjectId], 
           messages: [],
         });
       }
   
       const newMessage = new Message({
         senderId: senderObjectId,
-        receiverId: receiverObjectId, // Make sure this matches the field in your schema
+        receiverId: receiverObjectId, 
         message,
       });
   
-      // Save the message first
+      
       await newMessage.save();
   
-      // Push the message to the conversation and save
+      
       conversation.messages.push(newMessage._id);
       await conversation.save();
   
@@ -41,6 +43,10 @@ export const sendMessage = async (req, res) => {
       if (!receiver) {
         return res.status(400).json({ message: "Receiver not found" });
       }
+      const receiverSocketId = getReceiverSocketId(receiverId);
+		if (receiverSocketId) {
+			io.to(receiverSocketId).emit("newMessage", newMessage);
+		}
   
       res.status(201).json(newMessage);
     } catch (error) {
@@ -54,7 +60,7 @@ export const sendMessage = async (req, res) => {
       const { id: userToChatId } = req.params;
       const senderId = req.user._id;
   
-      // Convert IDs to ObjectId for query
+      
       const userToChatObjectId = new mongoose.Types.ObjectId(userToChatId);
       const senderObjectId = new mongoose.Types.ObjectId(senderId);
   
@@ -66,7 +72,7 @@ export const sendMessage = async (req, res) => {
       });
   
       if (!conversation) {
-        return res.status(200).json([]); // Return empty array if no conversation exists
+        return res.status(200).json([]); 
       }
   
       const messages = conversation.messages;

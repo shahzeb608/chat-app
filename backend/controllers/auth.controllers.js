@@ -4,7 +4,7 @@ import generateToken from '../utils/generateToken.js';
 
 export const signup = async (req, res) => {
   try {
-    const { fullName, userName, password, confirmPassword, gender } = req.body;
+    const { fullName, username, password, confirmPassword, gender } = req.body;
 
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
@@ -14,7 +14,8 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
-    const existingUser = await User.findOne({ userName });
+    
+    const existingUser = await User.findOne({ username });
     if (existingUser) {
       return res.status(400).json({ message: "Username already exists" });
     }
@@ -22,12 +23,12 @@ export const signup = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${userName}`;
-    const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${userName}`;
+    const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${username}`;
+    const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${username}`;
 
     const newUser = new User({
       fullName,
-      userName,
+      username, 
       password: hashedPassword,
       gender,
       profilePic: gender === "male" ? boyProfilePic : girlProfilePic,
@@ -40,7 +41,7 @@ export const signup = async (req, res) => {
     res.status(201).json({
       _id: newUser._id,
       fullName: newUser.fullName,
-      userName: newUser.userName,
+      username: newUser.username, 
       profilePic: newUser.profilePic,
     });
 
@@ -52,9 +53,10 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { userName, password } = req.body;
+    const { username, password } = req.body; 
 
-    const user = await User.findOne({ userName });
+    
+    const user = await User.findOne({ username }); 
     if (!user) {
       return res.status(400).json({ message: "Incorrect Username or Password!" });
     }
@@ -69,7 +71,7 @@ export const login = async (req, res) => {
     res.status(200).json({
       _id: user._id,
       fullName: user.fullName,
-      userName: user.userName,
+      username: user.username, 
       profilePic: user.profilePic,
     });
 
@@ -91,5 +93,14 @@ export const logout = async (req, res) => {
   } catch (error) {
     console.error("Error in logout:", error);
     res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export const verify = async (req, res) => {
+  try {
+    res.status(200).json({ message: "Token is valid" });
+  } catch (error) {
+    console.error("Error in verify:", error);
+    res.status(401).json({ message: "Authentication failed" });
   }
 };

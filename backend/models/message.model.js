@@ -6,7 +6,7 @@ const messageSchema = mongoose.Schema({
         ref: 'User',
         required: true
     },
-    receiverId: {  // Fixed capitalization
+    receiverId: {  
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
