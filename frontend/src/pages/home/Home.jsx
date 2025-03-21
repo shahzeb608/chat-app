@@ -1,12 +1,24 @@
 import MessageContainer from "../../components/messages/MessageContainer";
+import GroupMessageContainer from "../../components/group/GroupMessageContainer";
 import Sidebar from "../../components/sidebar/Sidebar";
+import useGroupStore from "../../zustand/useGroupStore";
+import useConversation from "../../zustand/useConversation";  
 
 const Home = () => {
-	return (
-		<div className='flex sm:h-[450px] md:h-[550px] rounded-lg overflow-hidden bg-gray-400 bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-0'>
-			<Sidebar />
-			<MessageContainer />
-		</div>
-	);
+  const { selectedGroup } = useGroupStore();
+  const { selectedConversation } = useConversation();  
+  
+  return (
+    <div className="flex h-screen">
+      <Sidebar />
+      
+      {selectedGroup ? (
+        <GroupMessageContainer />
+      ) : (
+        <MessageContainer />
+      )}
+    </div>
+  );
 };
+
 export default Home;

@@ -6,29 +6,22 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import groupRoutes from "./routes/group.routes.js"; // Add group routes
 import connectDB from "./db/db.js";
-import { app,  server } from "./socket/socket.js";
-
-
+import { app, server } from "./socket/socket.js";
 
 dotenv.config();
 
-
-
 app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-    exposedHeaders: ["Set-Cookie"]
-  }));
-
+  origin: "http://localhost:5173",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  exposedHeaders: ["Set-Cookie"]
+}));
 
 app.use(cookieParser());
-
-
 app.use(express.json());
-
 
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
@@ -37,21 +30,20 @@ app.use((req, res, next) => {
   next();
 });
 
-
 const port = process.env.PORT || 8000;
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes);
-
+app.use("/api/groups", groupRoutes); 
 
 app.get("/api/test", (req, res) => {
   res.status(200).json({ message: "API is working" });
 });
 
 server.listen(port, () => {
-    connectDB();
-    console.log(`Server is running on port ${port}`);
-    console.log(`Environment: ${process.env.NODE_ENV}`);
-    console.log(`JWT_SECRET is set: ${!!process.env.JWT_SECRET}`);
+  connectDB();
+  console.log(`Server is running on port ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`JWT_SECRET is set: ${!!process.env.JWT_SECRET}`);
 });

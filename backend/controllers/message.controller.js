@@ -6,54 +6,63 @@ import { getReceiverSocketId, io } from "../socket/socket.js";
 
 
 export const sendMessage = async (req, res) => {
-    try {
-      const { id: receiverId } = req.params;
-      const { message } = req.body;
-      const senderId = req.user._id;
-  
-      
-      const receiverObjectId = new mongoose.Types.ObjectId(receiverId);
-      const senderObjectId = new mongoose.Types.ObjectId(senderId);
-  
-      let conversation = await Conversation.findOne({
-        participants: { $all: [receiverObjectId, senderObjectId] },
+  try {
+    const { id: receiverId } = req.params;
+    const { message } = req.body;
+    const senderId = req.user._id;
+
+    console.log(`Sending message from ${senderId} to ${receiverId}: "${message}"`);
+    
+    const receiverObjectId = new mongoose.Types.ObjectId(receiverId);
+    const senderObjectId = new mongoose.Types.ObjectId(senderId);
+
+    let conversation = await Conversation.findOne({
+      participants: { $all: [receiverObjectId, senderObjectId] },
+    });
+
+    if (!conversation) {
+      console.log("Creating new conversation");
+      conversation = await Conversation.create({
+        participants: [receiverObjectId, senderObjectId], 
+        messages: [],
       });
-  
-      if (!conversation) {
-        conversation = await Conversation.create({
-          participants: [receiverObjectId, senderObjectId], 
-          messages: [],
-        });
-      }
-  
-      const newMessage = new Message({
-        senderId: senderObjectId,
-        receiverId: receiverObjectId, 
-        message,
-      });
-  
-      
-      await newMessage.save();
-  
-      
-      conversation.messages.push(newMessage._id);
-      await conversation.save();
-  
-      const receiver = await User.findById(receiverObjectId);
-      if (!receiver) {
-        return res.status(400).json({ message: "Receiver not found" });
-      }
-      const receiverSocketId = getReceiverSocketId(receiverId);
-		if (receiverSocketId) {
-			io.to(receiverSocketId).emit("newMessage", newMessage);
-		}
-  
-      res.status(201).json(newMessage);
-    } catch (error) {
-      console.error("Error in sendMessage:", error);
-      res.status(500).json({ message: "Something went wrong" });
     }
-  };
+
+    
+    const newMessage = new Message({
+      senderId,
+      receiverId,
+      message,
+      isGroupMessage: false  
+    });
+
+    await newMessage.save();
+    
+    conversation.messages.push(newMessage._id);
+    await conversation.save();
+
+    const receiver = await User.findById(receiverObjectId);
+    if (!receiver) {
+      console.log("Receiver not found");
+      return res.status(400).json({ message: "Receiver not found" });
+    }
+    
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    console.log(`Receiver socket ID: ${receiverSocketId}`);
+    
+    if (receiverSocketId) {
+      console.log(`Emitting new message event to socket ${receiverSocketId}`);
+      io.to(receiverSocketId).emit("newMessage", newMessage);
+    } else {
+      console.log("Receiver is not online, message will be delivered when they connect");
+    }
+
+    res.status(201).json(newMessage);
+  } catch (error) {
+    console.error("Error in sendMessage:", error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
 
   export const getMessage = async (req, res) => {
     try {

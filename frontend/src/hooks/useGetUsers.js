@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import useAuthStore from "../zustand/useAuthStore";
 
-const useGetConversations = () => {
+const useGetUsers = () => {
   const [loading, setLoading] = useState(false);
-  const [conversations, setConversations] = useState([]);
+  const [users, setUsers] = useState([]);
   const { authUser } = useAuthStore();
 
   useEffect(() => {
-    const getConversations = async () => {
+    const getUsers = async () => {
       if (!authUser) return;
       
       setLoading(true);
@@ -19,23 +19,23 @@ const useGetConversations = () => {
         
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.message || "Error fetching conversations");
+          throw new Error(errorData.message || "Error fetching users");
         }
         
         const data = await res.json();
-        setConversations(data);
+        setUsers(data);
       } catch (error) {
         toast.error(error.message);
-        setConversations([]);
+        setUsers([]);
       } finally {
         setLoading(false);
       }
     };
 
-    getConversations();
+    getUsers();
   }, [authUser]);
 
-  return { loading, conversations };
+  return { loading, users };
 };
 
-export default useGetConversations;
+export default useGetUsers;

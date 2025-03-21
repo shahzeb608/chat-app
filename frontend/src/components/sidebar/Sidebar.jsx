@@ -1,6 +1,8 @@
 import Conversations from "./Conversations";
 import LogoutButton from "./LogoutButton";
 import SearchInput from "./SearchInput";
+import GroupList from "./GroupList";
+
 
 const Sidebar = () => {
 	return (
@@ -9,6 +11,8 @@ const Sidebar = () => {
 			<div className='divider px-3'></div>
 			<Conversations />
 			<LogoutButton />
+			<GroupList />
+
 		</div>
 	);
 };
